@@ -3,7 +3,7 @@
 [![NPM version](https://img.shields.io/npm/v/localstorage-browser-polyfill.svg?style=flat)](https://npmjs.org/package/localstorage-browser-polyfill)
 
 
-IE6/7 `localStorage` [test](nimojs.github.io/localstorage-browser-polyfill/test.html)
+IE6/7 `localStorage` [test](http://nimojs.github.io/localstorage-browser-polyfill/test.html)
 
 > IE 8 and 9 store data based only on hostname, ignoring the scheme (http vs https) and port number as required by the specification.
 
