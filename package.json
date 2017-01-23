@@ -2,6 +2,7 @@
   "name": "localstorage-browser-polyfill",
   "version": "0.1.0",
   "main": "index.js",
+  "homepage": "https://github.com/nimojs/localstorage-browser-polyfill",
   "dependencies": {
     "JSON": "^1.0.0",
     "js-cookie": "^2.1.3"

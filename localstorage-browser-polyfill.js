@@ -45,21 +45,23 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(1)
-	__webpack_require__(4)
-	__webpack_require__(5)
+	__webpack_require__(2)
 	__webpack_require__(3)
-	var Cookies = __webpack_require__(2)
-	var CreateLocalStorage = function (settings) {
-	    var length = 0
-	    for(var key in settings.storage) {
+	var Cookies = __webpack_require__(4)
+	var LocalStoragePolyfill = function (settings) {
+	    this.__localstorag_browser_polyfill_syncCookie()
+	    this.__localstorag_browser_polyfill_update()
+	}
+	LocalStoragePolyfill.prototype.__localstorag_browser_polyfill_syncCookie = function () {
+	    var cookieData = Cookies.get('__localstorag_browser_polyfill')
+	    cookieData = cookieData? JSON.parse(cookieData): {}
+	    for(var key in cookieData) {
 	        if (!this.__localstorage_browser_polyfill_isDisableKey(key)) {
-	            this[key] = settings.storage[key]
-	            length++
+	            this[key] = cookieData[key]
 	        }
 	    }
-	    this.length = length
 	}
-	CreateLocalStorage.prototype.__localstorage_browser_polyfill_disableKey = [
+	LocalStoragePolyfill.prototype.__localstorage_browser_polyfill_disableKey = [
 	    'getItem',
 	    'key',
 	    'setItem',
@@ -68,13 +70,13 @@
 	    'clear',
 	    '__localstorage_browser_polyfill_disableKey',
 	    '__localstorage_browser_polyfill_isDisableKey',
-	    '__localstorag_browser_polyfill_update'
+	    '__localstorag_browser_polyfill_update',
+	    '__localstorag_browser_polyfill_syncCookie'
 	]
-
-	CreateLocalStorage.prototype.__localstorage_browser_polyfill_isDisableKey = function (key) {
+	LocalStoragePolyfill.prototype.__localstorage_browser_polyfill_isDisableKey = function (key) {
 	    return this.__localstorage_browser_polyfill_disableKey.indexOf(key) !== -1
 	}
-	CreateLocalStorage.prototype.__localstorag_browser_polyfill_update = function () {
+	LocalStoragePolyfill.prototype.__localstorag_browser_polyfill_update = function () {
 	    var length = 0
 	    var storage = {}
 	    for(var key in this) {
@@ -89,19 +91,22 @@
 	    })
 	    this.length = length
 	}
-	CreateLocalStorage.prototype.setItem = function (key, value) {
+	LocalStoragePolyfill.prototype.setItem = function (key, value) {
 	    if (!key) {return}
 	    if (this.__localstorage_browser_polyfill_isDisableKey(key)) {
 	        throw new Error(key + ' is disable key, disable key: ' + this.__localstorage_browser_polyfill_disableKey.join(','))
 	    }
-	    var oldValue = this[key]
 	    this[key] = value
 	    this.__localstorag_browser_polyfill_update()
 	}
-	CreateLocalStorage.prototype.getItem = function (key) {
+	LocalStoragePolyfill.prototype.getItem = function (key) {
+	    if (this.__localstorage_browser_polyfill_isDisableKey(key)) {
+	        throw new Error(key + ' is disable key, disable key: ' + this.__localstorage_browser_polyfill_disableKey.join(','))
+	    }
+	    this.__localstorag_browser_polyfill_syncCookie()
 	    return this[key] || null
 	}
-	CreateLocalStorage.prototype.clear = function () {
+	LocalStoragePolyfill.prototype.clear = function () {
 	    for(var key in this) {
 	        if (!this.__localstorage_browser_polyfill_isDisableKey(key)) {
 	            delete this[key]
@@ -109,7 +114,7 @@
 	    }
 	    this.__localstorag_browser_polyfill_update()
 	}
-	CreateLocalStorage.prototype.removeItem = function (delKey) {
+	LocalStoragePolyfill.prototype.removeItem = function (delKey) {
 	    for(var key in this) {
 	        if (delKey === key && !this.__localstorage_browser_polyfill_isDisableKey(key)) {
 	            delete this[key]
@@ -117,11 +122,20 @@
 	    }
 	    this.__localstorag_browser_polyfill_update()
 	}
-	var cookieData = Cookies.get('__localstorag_browser_polyfill')
-	cookieData = cookieData?JSON.parse(cookieData):{}
-	window.localStorageBrowserPolyfill = new CreateLocalStorage({
-	    storage: cookieData
-	})
+	LocalStoragePolyfill.prototype.key = function (index) {
+	    this.__localstorag_browser_polyfill_syncCookie()
+	    var array = []
+	    for(var key in this) {
+	        if (!this.__localstorage_browser_polyfill_isDisableKey(key)) {
+	            array.push(key)
+	        }
+	    }
+	    return this.getItem(array[index])
+	}
+	if (typeof window.localStorage === 'undefined') {
+	    window.localStorageBrowserPolyfill = new LocalStoragePolyfill()
+	    window.localStorage = window.localStorageBrowserPolyfill
+	}
 
 
 /***/ },
@@ -193,164 +207,71 @@
 
 /***/ },
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
-	 * JavaScript Cookie v2.1.3
-	 * https://github.com/js-cookie/js-cookie
-	 *
-	 * Copyright 2006, 2015 Klaus Hartl & Fagner Brack
-	 * Released under the MIT license
-	 */
-	;(function (factory) {
-		var registeredInModuleLoader = false;
-		if (true) {
-			!(__WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-			registeredInModuleLoader = true;
-		}
-		if (true) {
-			module.exports = factory();
-			registeredInModuleLoader = true;
-		}
-		if (!registeredInModuleLoader) {
-			var OldCookies = window.Cookies;
-			var api = window.Cookies = factory();
-			api.noConflict = function () {
-				window.Cookies = OldCookies;
-				return api;
-			};
-		}
-	}(function () {
-		function extend () {
-			var i = 0;
-			var result = {};
-			for (; i < arguments.length; i++) {
-				var attributes = arguments[ i ];
-				for (var key in attributes) {
-					result[key] = attributes[key];
-				}
-			}
-			return result;
-		}
+	// Production steps of ECMA-262, Edition 5, 15.4.4.18
+	// Reference: http://es5.github.io/#x15.4.4.18
+	if (!Array.prototype.forEach) {
 
-		function init (converter) {
-			function api (key, value, attributes) {
-				var result;
-				if (typeof document === 'undefined') {
-					return;
-				}
+	  Array.prototype.forEach = function(callback, thisArg) {
 
-				// Write
+	    var T, k;
 
-				if (arguments.length > 1) {
-					attributes = extend({
-						path: '/'
-					}, api.defaults, attributes);
+	    if (this === null) {
+	      throw new TypeError(' this is null or not defined');
+	    }
 
-					if (typeof attributes.expires === 'number') {
-						var expires = new Date();
-						expires.setMilliseconds(expires.getMilliseconds() + attributes.expires * 864e+5);
-						attributes.expires = expires;
-					}
+	    // 1. Let O be the result of calling toObject() passing the
+	    // |this| value as the argument.
+	    var O = Object(this);
 
-					try {
-						result = JSON.stringify(value);
-						if (/^[\{\[]/.test(result)) {
-							value = result;
-						}
-					} catch (e) {}
+	    // 2. Let lenValue be the result of calling the Get() internal
+	    // method of O with the argument "length".
+	    // 3. Let len be toUint32(lenValue).
+	    var len = O.length >>> 0;
 
-					if (!converter.write) {
-						value = encodeURIComponent(String(value))
-							.replace(/%(23|24|26|2B|3A|3C|3E|3D|2F|3F|40|5B|5D|5E|60|7B|7D|7C)/g, decodeURIComponent);
-					} else {
-						value = converter.write(value, key);
-					}
+	    // 4. If isCallable(callback) is false, throw a TypeError exception.
+	    // See: http://es5.github.com/#x9.11
+	    if (typeof callback !== "function") {
+	      throw new TypeError(callback + ' is not a function');
+	    }
 
-					key = encodeURIComponent(String(key));
-					key = key.replace(/%(23|24|26|2B|5E|60|7C)/g, decodeURIComponent);
-					key = key.replace(/[\(\)]/g, escape);
+	    // 5. If thisArg was supplied, let T be thisArg; else let
+	    // T be undefined.
+	    if (arguments.length > 1) {
+	      T = thisArg;
+	    }
 
-					return (document.cookie = [
-						key, '=', value,
-						attributes.expires ? '; expires=' + attributes.expires.toUTCString() : '', // use expires attribute, max-age is not supported by IE
-						attributes.path ? '; path=' + attributes.path : '',
-						attributes.domain ? '; domain=' + attributes.domain : '',
-						attributes.secure ? '; secure' : ''
-					].join(''));
-				}
+	    // 6. Let k be 0
+	    k = 0;
 
-				// Read
+	    // 7. Repeat, while k < len
+	    while (k < len) {
 
-				if (!key) {
-					result = {};
-				}
+	      var kValue;
 
-				// To prevent the for loop in the first place assign an empty array
-				// in case there are no cookies at all. Also prevents odd result when
-				// calling "get()"
-				var cookies = document.cookie ? document.cookie.split('; ') : [];
-				var rdecode = /(%[0-9A-Z]{2})+/g;
-				var i = 0;
+	      // a. Let Pk be ToString(k).
+	      //    This is implicit for LHS operands of the in operator
+	      // b. Let kPresent be the result of calling the HasProperty
+	      //    internal method of O with argument Pk.
+	      //    This step can be combined with c
+	      // c. If kPresent is true, then
+	      if (k in O) {
 
-				for (; i < cookies.length; i++) {
-					var parts = cookies[i].split('=');
-					var cookie = parts.slice(1).join('=');
+	        // i. Let kValue be the result of calling the Get internal
+	        // method of O with argument Pk.
+	        kValue = O[k];
 
-					if (cookie.charAt(0) === '"') {
-						cookie = cookie.slice(1, -1);
-					}
-
-					try {
-						var name = parts[0].replace(rdecode, decodeURIComponent);
-						cookie = converter.read ?
-							converter.read(cookie, name) : converter(cookie, name) ||
-							cookie.replace(rdecode, decodeURIComponent);
-
-						if (this.json) {
-							try {
-								cookie = JSON.parse(cookie);
-							} catch (e) {}
-						}
-
-						if (key === name) {
-							result = cookie;
-							break;
-						}
-
-						if (!key) {
-							result[name] = cookie;
-						}
-					} catch (e) {}
-				}
-
-				return result;
-			}
-
-			api.set = api;
-			api.get = function (key) {
-				return api.call(api, key);
-			};
-			api.getJSON = function () {
-				return api.apply({
-					json: true
-				}, [].slice.call(arguments));
-			};
-			api.defaults = {};
-
-			api.remove = function (key, attributes) {
-				api(key, '', extend(attributes, {
-					expires: -1
-				}));
-			};
-
-			api.withConverter = init;
-
-			return api;
-		}
-
-		return init(function () {});
-	}));
+	        // ii. Call the Call internal method of callback with T as
+	        // the this value and argument list containing kValue, k, and O.
+	        callback.call(T, kValue, k, O);
+	      }
+	      // d. Increase k by 1.
+	      k++;
+	    }
+	    // 8. return undefined
+	  };
+	}
 
 
 /***/ },
@@ -852,207 +773,164 @@
 
 /***/ },
 /* 4 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	// Production steps of ECMA-262, Edition 5, 15.4.4.18
-	// Reference: http://es5.github.io/#x15.4.4.18
-	if (!Array.prototype.forEach) {
-
-	  Array.prototype.forEach = function(callback, thisArg) {
-
-	    var T, k;
-
-	    if (this === null) {
-	      throw new TypeError(' this is null or not defined');
-	    }
-
-	    // 1. Let O be the result of calling toObject() passing the
-	    // |this| value as the argument.
-	    var O = Object(this);
-
-	    // 2. Let lenValue be the result of calling the Get() internal
-	    // method of O with the argument "length".
-	    // 3. Let len be toUint32(lenValue).
-	    var len = O.length >>> 0;
-
-	    // 4. If isCallable(callback) is false, throw a TypeError exception.
-	    // See: http://es5.github.com/#x9.11
-	    if (typeof callback !== "function") {
-	      throw new TypeError(callback + ' is not a function');
-	    }
-
-	    // 5. If thisArg was supplied, let T be thisArg; else let
-	    // T be undefined.
-	    if (arguments.length > 1) {
-	      T = thisArg;
-	    }
-
-	    // 6. Let k be 0
-	    k = 0;
-
-	    // 7. Repeat, while k < len
-	    while (k < len) {
-
-	      var kValue;
-
-	      // a. Let Pk be ToString(k).
-	      //    This is implicit for LHS operands of the in operator
-	      // b. Let kPresent be the result of calling the HasProperty
-	      //    internal method of O with argument Pk.
-	      //    This step can be combined with c
-	      // c. If kPresent is true, then
-	      if (k in O) {
-
-	        // i. Let kValue be the result of calling the Get internal
-	        // method of O with argument Pk.
-	        kValue = O[k];
-
-	        // ii. Call the Call internal method of callback with T as
-	        // the this value and argument list containing kValue, k, and O.
-	        callback.call(T, kValue, k, O);
-	      }
-	      // d. Increase k by 1.
-	      k++;
-	    }
-	    // 8. return undefined
-	  };
-	}
-
-
-/***/ },
-/* 5 */
-/***/ function(module, exports) {
-
-	/**
-	 * @license addEventListener polyfill 1.0 / Eirik Backer / MIT Licence
-	 * https://gist.github.com/2864711/946225eb3822c203e8d6218095d888aac5e1748e
+	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	 * JavaScript Cookie v2.1.3
+	 * https://github.com/js-cookie/js-cookie
 	 *
-	 * sounisi5011 version:
-	 * http://qiita.com/sounisi5011/items/a8fc80e075e4f767b79a#11
+	 * Copyright 2006, 2015 Klaus Hartl & Fagner Brack
+	 * Released under the MIT license
 	 */
-	(function (window, document, listeners_prop_name) {
-	    if ((!window.addEventListener || !window.removeEventListener) && window.attachEvent && window.detachEvent) {
-	        /**
-	         * @param {*} value
-	         * @return {boolean}
-	         */
-	        var is_callable = function (value) {
-	            return typeof value === 'function';
-	        };
-	        /**
-	         * @param {!Window|HTMLDocument|Node} self
-	         * @param {EventListener|function(!Event):(boolean|undefined)} listener
-	         * @return {!function(Event)|undefined}
-	         */
-	        var listener_get = function (self, listener) {
-	            var listeners = listener[listeners_prop_name];
-	            if (listeners) {
-	                var lis;
-	                var i = listeners.length;
-	                while (i--) {
-	                    lis = listeners[i];
-	                    if (lis[0] === self) {
-	                        return lis[1];
-	                    }
-	                }
-	            }
-	        };
-	        /**
-	         * @param {!Window|HTMLDocument|Node} self
-	         * @param {EventListener|function(!Event):(boolean|undefined)} listener
-	         * @param {!function(Event)} callback
-	         * @return {!function(Event)}
-	         */
-	        var listener_set = function (self, listener, callback) {
-	            var listeners = listener[listeners_prop_name] || (listener[listeners_prop_name] = []);
-	            return listener_get(self, listener) || (listeners[listeners.length] = [self, callback], callback);
-	        };
-	        /**
-	         * @param {string} methodName
-	         */
-	        var docHijack = function (methodName) {
-	            var old = document[methodName];
-	            document[methodName] = function (v) {
-	                return addListen(old(v));
-	            };
-	        };
-	        /**
-	         * @this {!Window|HTMLDocument|Node}
-	         * @param {string} type
-	         * @param {EventListener|function(!Event):(boolean|undefined)} listener
-	         * @param {boolean=} useCapture
-	         */
-	        var addEvent = function (type, listener, useCapture) {
-	            if (is_callable(listener)) {
-	                var self = this;
-	                self.attachEvent(
-	                    'on' + type,
-	                    listener_set(self, listener, function (e) {
-	                        e = e || window.event;
-	                        e.preventDefault = e.preventDefault || function () { e.returnValue = false };
-	                        e.stopPropagation = e.stopPropagation || function () { e.cancelBubble = true };
-	                        e.target = e.target || e.srcElement || document.documentElement;
-	                        e.currentTarget = e.currentTarget || self;
-	                        e.timeStamp = e.timeStamp || (new Date()).getTime();
-	                        listener.call(self, e);
-	                    })
-	                );
-	            }
-	        };
-	        /**
-	         * @this {!Window|HTMLDocument|Node}
-	         * @param {string} type
-	         * @param {EventListener|function(!Event):(boolean|undefined)} listener
-	         * @param {boolean=} useCapture
-	         */
-	        var removeEvent = function (type, listener, useCapture) {
-	            if (is_callable(listener)) {
-	                var self = this;
-	                var lis = listener_get(self, listener);
-	                if (lis) {
-	                    self.detachEvent('on' + type, lis);
-	                }
-	            }
-	        };
-	        /**
-	         * @param {!Node|NodeList|Array} obj
-	         * @return {!Node|NodeList|Array}
-	         */
-	        var addListen = function (obj) {
-	            var i = obj.length;
-	            if (i) {
-	                while (i--) {
-	                    obj[i].addEventListener = addEvent;
-	                    obj[i].removeEventListener = removeEvent;
-	                }
-	            } else {
-	                obj.addEventListener = addEvent;
-	                obj.removeEventListener = removeEvent;
-	            }
-	            return obj;
-	        };
+	;(function (factory) {
+		var registeredInModuleLoader = false;
+		if (true) {
+			!(__WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+			registeredInModuleLoader = true;
+		}
+		if (true) {
+			module.exports = factory();
+			registeredInModuleLoader = true;
+		}
+		if (!registeredInModuleLoader) {
+			var OldCookies = window.Cookies;
+			var api = window.Cookies = factory();
+			api.noConflict = function () {
+				window.Cookies = OldCookies;
+				return api;
+			};
+		}
+	}(function () {
+		function extend () {
+			var i = 0;
+			var result = {};
+			for (; i < arguments.length; i++) {
+				var attributes = arguments[ i ];
+				for (var key in attributes) {
+					result[key] = attributes[key];
+				}
+			}
+			return result;
+		}
 
-	        addListen([document, window]);
-	        if ('Element' in window) {
-	            /**
-	             * IE8
-	             */
-	            var element = window.Element;
-	            element.prototype.addEventListener = addEvent;
-	            element.prototype.removeEventListener = removeEvent;
-	        } else {
-	            /**
-	             * IE < 8
-	             */
-	                //Make sure we also init at domReady
-	            document.attachEvent('onreadystatechange', function () { addListen(document.all) });
-	            docHijack('getElementsByTagName');
-	            docHijack('getElementById');
-	            docHijack('createElement');
-	            addListen(document.all);
-	        }
-	    }
-	})(window, document, 'x-ms-event-listeners');
+		function init (converter) {
+			function api (key, value, attributes) {
+				var result;
+				if (typeof document === 'undefined') {
+					return;
+				}
+
+				// Write
+
+				if (arguments.length > 1) {
+					attributes = extend({
+						path: '/'
+					}, api.defaults, attributes);
+
+					if (typeof attributes.expires === 'number') {
+						var expires = new Date();
+						expires.setMilliseconds(expires.getMilliseconds() + attributes.expires * 864e+5);
+						attributes.expires = expires;
+					}
+
+					try {
+						result = JSON.stringify(value);
+						if (/^[\{\[]/.test(result)) {
+							value = result;
+						}
+					} catch (e) {}
+
+					if (!converter.write) {
+						value = encodeURIComponent(String(value))
+							.replace(/%(23|24|26|2B|3A|3C|3E|3D|2F|3F|40|5B|5D|5E|60|7B|7D|7C)/g, decodeURIComponent);
+					} else {
+						value = converter.write(value, key);
+					}
+
+					key = encodeURIComponent(String(key));
+					key = key.replace(/%(23|24|26|2B|5E|60|7C)/g, decodeURIComponent);
+					key = key.replace(/[\(\)]/g, escape);
+
+					return (document.cookie = [
+						key, '=', value,
+						attributes.expires ? '; expires=' + attributes.expires.toUTCString() : '', // use expires attribute, max-age is not supported by IE
+						attributes.path ? '; path=' + attributes.path : '',
+						attributes.domain ? '; domain=' + attributes.domain : '',
+						attributes.secure ? '; secure' : ''
+					].join(''));
+				}
+
+				// Read
+
+				if (!key) {
+					result = {};
+				}
+
+				// To prevent the for loop in the first place assign an empty array
+				// in case there are no cookies at all. Also prevents odd result when
+				// calling "get()"
+				var cookies = document.cookie ? document.cookie.split('; ') : [];
+				var rdecode = /(%[0-9A-Z]{2})+/g;
+				var i = 0;
+
+				for (; i < cookies.length; i++) {
+					var parts = cookies[i].split('=');
+					var cookie = parts.slice(1).join('=');
+
+					if (cookie.charAt(0) === '"') {
+						cookie = cookie.slice(1, -1);
+					}
+
+					try {
+						var name = parts[0].replace(rdecode, decodeURIComponent);
+						cookie = converter.read ?
+							converter.read(cookie, name) : converter(cookie, name) ||
+							cookie.replace(rdecode, decodeURIComponent);
+
+						if (this.json) {
+							try {
+								cookie = JSON.parse(cookie);
+							} catch (e) {}
+						}
+
+						if (key === name) {
+							result = cookie;
+							break;
+						}
+
+						if (!key) {
+							result[name] = cookie;
+						}
+					} catch (e) {}
+				}
+
+				return result;
+			}
+
+			api.set = api;
+			api.get = function (key) {
+				return api.call(api, key);
+			};
+			api.getJSON = function () {
+				return api.apply({
+					json: true
+				}, [].slice.call(arguments));
+			};
+			api.defaults = {};
+
+			api.remove = function (key, attributes) {
+				api(key, '', extend(attributes, {
+					expires: -1
+				}));
+			};
+
+			api.withConverter = init;
+
+			return api;
+		}
+
+		return init(function () {});
+	}));
 
 
 /***/ }

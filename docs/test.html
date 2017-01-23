@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>localstorage-browser-polyfill test</title>
+    <link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.11.0.css" />
+    <script src="http://code.jquery.com/qunit/qunit-1.11.0.js"></script>
+    <script>
+    document.write('<scr' + 'ipt src="../localstorage-browser-polyfill.js?time=' + new Date().getTime() + '" ></scr' + 'ipt>')
+    </script>
+</head>
+<body>
+<strong>Must be accessed through the server url,just like http://localhost:9080/test/index.html  http://127.0.0.1:1234/test/index.html http://www.domain.com/test/index.html</strong>
+<h1 id="qunit-header">localstorage-browser-polyfill</h1>
+<h2 id="qunit-banner"></h2>
+<ol id="qunit-tests"></ol>
+
+<script>
+(function() {
+    if (typeof window.localStorageBrowserPolyfill === 'undefined') {
+        document.write('<h1>The browser support localStorage, don\'t need to test</h1>')
+        return
+    }
+    test("setItem getItem", function() {
+        var time = new Date().getTime()
+        localStorageBrowserPolyfill.setItem('time', time) * Math.random()
+        equal(localStorageBrowserPolyfill.getItem('time'), time)
+    })
+    test("key has white space", function() {
+        var time = new Date().getTime() * Math.random()
+        localStorageBrowserPolyfill.setItem('ab c', time)
+        equal(localStorageBrowserPolyfill.getItem('ab c'), time)
+    })
+    test("key has white space", function() {
+        var time = new Date().getTime() * Math.random()
+        localStorageBrowserPolyfill.setItem('ab c', time)
+        equal(localStorageBrowserPolyfill.getItem('ab c'), time)
+    })
+    test("clear", function() {
+        var time = new Date().getTime() * Math.random()
+        var random = Math.random()
+        localStorageBrowserPolyfill.setItem('some1', random)
+        equal(localStorageBrowserPolyfill.getItem('some1'), random)
+        localStorageBrowserPolyfill.setItem('some2', time)
+        equal(localStorageBrowserPolyfill.getItem('some2'), time)
+        localStorageBrowserPolyfill.clear()
+        equal(localStorageBrowserPolyfill.getItem('some1'), null)
+        equal(localStorageBrowserPolyfill.getItem('some2'), null)
+    })
+    test("removeItem", function() {
+        var time = new Date().getTime() * Math.random()
+        localStorageBrowserPolyfill.setItem('removesome', time)
+        equal(localStorageBrowserPolyfill.getItem('removesome'), time)
+        localStorageBrowserPolyfill.removeItem('removesome')
+        equal(localStorageBrowserPolyfill.getItem('removesome'), null)
+    })
+    test("length", function() {
+        equal(localStorageBrowserPolyfill.length, 0)
+        localStorageBrowserPolyfill.setItem('1')
+        localStorageBrowserPolyfill.setItem('2')
+        localStorageBrowserPolyfill.setItem('3')
+        localStorageBrowserPolyfill.setItem('4')
+        localStorageBrowserPolyfill.setItem('5')
+        equal(localStorageBrowserPolyfill.length, 5)
+        localStorageBrowserPolyfill.removeItem('3')
+        equal(localStorageBrowserPolyfill.length, 4)
+        localStorageBrowserPolyfill.removeItem('3')
+        equal(localStorageBrowserPolyfill.length, 4)
+
+        localStorageBrowserPolyfill.removeItem('1')
+        localStorageBrowserPolyfill.removeItem('2')
+        equal(localStorageBrowserPolyfill.length, 2)
+        localStorageBrowserPolyfill.clear()
+        equal(localStorageBrowserPolyfill.length, 0)
+    })
+    test("other window setItem", function () {
+        stop()
+        var eIframe = document.createElement('iframe')
+        eIframe.setAttribute('src', './iframe.html')
+        eIframe.onload = function () {
+            equal(localStorageBrowserPolyfill.getItem('other browser value'), 'abcdef1234')
+            start()
+        }
+        document.body.appendChild(eIframe)
+    })
+    test('key(index)', function () {
+        localStorageBrowserPolyfill.clear()
+        localStorageBrowserPolyfill.setItem('abc', 'efef')
+        localStorageBrowserPolyfill.setItem('123', 'owfw')
+        equal(localStorageBrowserPolyfill.key(0), 'owfw')
+        equal(localStorageBrowserPolyfill.key(1), 'efef')
+        equal(localStorageBrowserPolyfill.length, 2)
+    })
+})()
+</script>
+</body>
+</html>

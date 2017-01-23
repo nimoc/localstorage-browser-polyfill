@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>localstorage-browser-polyfill</title>
+    <title>localstorage-browser-polyfill iframe</title>
+    <script src="../localstorage-browser-polyfill.js"></script>
 </head>
 <body>
-iframe:<input type="text" id="text" />
-<script src="../localstorage-browser-polyfill.js"></script>
-<script src="./textStorage.js"></script>
+<code>localStorageBrowserPolyfill.setItem('other browser value', 'abcdef1234')</code>
+<script>
+localStorageBrowserPolyfill.setItem('other browser value', 'abcdef1234')
+</script>
 </body>
 </html>
